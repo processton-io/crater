@@ -56,7 +56,7 @@ COPY --chown=www-data:www-data . /var/www
 RUN cp .env.example .env
 # Install PHP and JS dependencies, build assets
 RUN composer install --no-interaction --no-plugins --no-dev --prefer-dist
-# RUN npm ci && npm run build
+RUN npm ci && npm run build
 
 # Laravel setup
 RUN php artisan migrate --force && php artisan config:clear && php artisan cache:clear
