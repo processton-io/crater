@@ -4,7 +4,7 @@ LABEL maintainer="ahmadkokab@processton.com"
 
 ENV COMPOSER_MEMORY_LIMIT='-1'
 
-RUN apt-get install -y --allow --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     php8.3-gd \
     sqlite3 \
     php8.3-sqlite3 \
