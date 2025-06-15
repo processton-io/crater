@@ -1,42 +1,36 @@
-FROM ahmadfaryabkokab/laravel-docker:latest AS processton-carter
+FROM ahmadfaryabkokab/laravel-docker:latest
 
 LABEL maintainer="ahmadkokab@processton.com"
 
 ENV COMPOSER_MEMORY_LIMIT='-1'
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    php8.3-gd \
-    sqlite3 \
-    php8.3-sqlite3 \
-    libsqlite3-dev
-
 #####################################
-# Laravel Schedule Cron Job:
+# Required Variables:
 #####################################
 
-RUN echo "* * * * * www-data /usr/local/bin/php /var/www/artisan schedule:run >> /dev/null 2>&1"  >> /etc/cron.d/laravel-scheduler
-RUN chmod 0644 /etc/cron.d/laravel-scheduler
+RUN export NODE_OPTIONS="--no-deprecation"
+
+#####################################
+# Git Safe Directory && Source repos:
+#####################################
+
+RUN git config --global --add safe.directory /var/www
+
+RUN npm config set registry https://registry.npmmirror.com/
 
 #####################################
 # Files & Directories Permissions:
 #####################################
 
-RUN rm -r /var/lib/apt/lists/*
-
 RUN usermod -u 1000 www-data
 
-RUN rm -rf /var/www/html
+COPY ./docker/nginx/ /etc/nginx/sites-available/
 
-COPY ./docker/nginx/default.conf /etc/nginx/sites-available/default
+COPY ./docker/php/fpm.ini /etc/php/8.4/fpm/php.ini
+COPY ./docker/php/cli.ini /etc/php/8.4/cli/php.ini
 
-COPY ./docker/php/fpm.ini /etc/php/8.3/fpm/php.ini
-COPY ./docker/php/cli.ini /etc/php/8.3/cli/php.ini
+ADD ./docker/supervisor/worker.conf /etc/supervisor/conf.d/worker.conf
 
-WORKDIR /var/www
-
-COPY --chown=www-data:www-data . /var/www
-
-ADD docker/supervisord.conf /etc/supervisor/conf.d/worker.conf
 COPY ./docker/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 RUN ln -s /usr/local/bin/docker-entrypoint.sh /
@@ -55,7 +49,7 @@ RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --no-plugins --no
 
 RUN npm install -g laravel-mix webpack laravel-vite-plugin vite
 RUN npm install -D webpack-cli
-RUN yarn
+RUN yarn install --frozen-lockfile
 RUN yarn build
 
 #####################################
@@ -72,7 +66,6 @@ RUN php artisan cache:clear
 
 USER root
 
-RUN service nginx start
-RUN service php8.3-fpm start
+CMD ["docker-entrypoint.sh"]
 
 EXPOSE 80
