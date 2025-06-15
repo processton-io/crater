@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build && cp public/build/.vite/manifest.json public/build/manifest.json",
+    "build": "vite build",
     "serve": "vite preview",
     "test": "eslint ./resources/scripts --ext .js,.vue"
   },
