@@ -8,7 +8,7 @@
   "license": "MIT",
   "type": "project",
   "require": {
-    "php": "^7.4 || ^8.0",
+    "php": "^7.4 || ^8.0 || ^8.1 || ^8.2 || ^8.3",
     "aws/aws-sdk-php": "^3.142",
     "barryvdh/laravel-dompdf": "^0.9.0",
     "crater-invoice/modules": "^1.0.0",

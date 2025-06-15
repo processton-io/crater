@@ -1,40 +1,81 @@
-FROM php:8.1-fpm
+FROM ahmadfaryabkokab/laravel-docker:latest AS processton-carter
 
-# Arguments defined in docker-compose.yml
-ARG user
-ARG uid
+LABEL maintainer="ahmadkokab@processton.com"
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    libzip-dev \
-    libmagickwand-dev \
-    mariadb-client
+ENV COMPOSER_MEMORY_LIMIT='-1'
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get install -y --force-yes --no-install-recommends \
+    php8.3-gd \
+    sqlite3 \
+    php8.3-sqlite3 \
+    libsqlite3-dev
 
-RUN pecl install imagick \
-    && docker-php-ext-enable imagick
+#####################################
+# Laravel Schedule Cron Job:
+#####################################
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
+RUN echo "* * * * * www-data /usr/local/bin/php /var/www/artisan schedule:run >> /dev/null 2>&1"  >> /etc/cron.d/laravel-scheduler
+RUN chmod 0644 /etc/cron.d/laravel-scheduler
 
-# Get latest Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+#####################################
+# Files & Directories Permissions:
+#####################################
 
-# Create system user to run Composer and Artisan Commands
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
+RUN rm -r /var/lib/apt/lists/*
 
-# Set working directory
+RUN usermod -u 1000 www-data
+
+RUN rm -rf /var/www/html
+
+COPY ./docker/nginx/default.conf /etc/nginx/sites-available/default
+
+COPY ./docker/php/fpm.ini /etc/php/8.3/fpm/php.ini
+COPY ./docker/php/cli.ini /etc/php/8.3/cli/php.ini
+
 WORKDIR /var/www
 
-USER $user
+COPY --chown=www-data:www-data . /var/www
+
+ADD docker/supervisord.conf /etc/supervisor/conf.d/worker.conf
+COPY ./docker/docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN ln -s /usr/local/bin/docker-entrypoint.sh /
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+RUN mkdir -p /var/database
+COPY ./database/laravel.db /var/database/laravel.db
+
+#####################################
+# Composer:
+#####################################
+
+RUN git config --global --add safe.directory /var/www
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --no-plugins --no-dev --prefer-dist
+
+#####################################
+# YARN Setup:
+#####################################
+
+RUN npm install -g laravel-mix webpack laravel-vite-plugin vite
+RUN npm install -D webpack-cli
+RUN yarn
+RUN yarn build
+
+#####################################
+# Artisan:
+#####################################
+
+RUN php artisan migrate
+RUN php artisan config:clear
+RUN php artisan cache:clear
+
+#####################################
+# Start Services:
+#####################################
+
+USER root
+
+RUN service nginx start
+RUN service php8.3-fpm start
+
+EXPOSE 80
