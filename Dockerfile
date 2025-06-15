@@ -39,6 +39,7 @@ ENTRYPOINT ["docker-entrypoint.sh"]
 #####################################
 # Composer:
 #####################################
+COPY . /var/www
 
 WORKDIR /var/www
 
