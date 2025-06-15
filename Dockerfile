@@ -40,6 +40,8 @@ ENTRYPOINT ["docker-entrypoint.sh"]
 # Composer:
 #####################################
 
+WORKDIR /var/www
+
 RUN git config --global --add safe.directory /var/www
 RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --no-plugins --no-dev --prefer-dist
 
