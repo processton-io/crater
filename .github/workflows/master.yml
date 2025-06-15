@@ -6,27 +6,23 @@ on:
       - master
 
 permissions:
-  contents: write  # Grants permission to create releases
+  contents: write
 
 jobs:
-  release:
+  calculate_version:
     runs-on: ubuntu-latest
-
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Ensures all tags are fetched
-
-      - name: Get latest tag and generate next version
+          fetch-depth: 0
+      - name: Calculate next version
         id: get_version
         run: |
-          git fetch --tags  # Ensure all remote tags are available
-
-          # Find the latest version tag
+          git fetch --tags
           LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
-
-          # Default first version
           if [[ -z "$LATEST_TAG" ]]; then
             VERSION="v0.0.1"
           else
@@ -34,71 +30,71 @@ jobs:
             MAJOR=${parts[0]}
             MINOR=${parts[1]}
             PATCH=${parts[2]}
-
-            # Increment PATCH
             PATCH=$((PATCH + 1))
-
-            # If PATCH reaches 10, reset to 0 and increase MINOR
             if [[ "$PATCH" -ge 10 ]]; then
               PATCH=0
               MINOR=$((MINOR + 1))
             fi
-
-            # Build new version
             VERSION="v${MAJOR}.${MINOR}.${PATCH}"
           fi
+          echo "Next version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-          echo "New version: $VERSION"
-          echo "version=$VERSION" >> $GITHUB_ENV
-
+  version_release:
+    needs: calculate_version
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.calculate_version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Create and push new version tag
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Check if tag exists before pushing
-          if git rev-parse ${{ env.version }} >/dev/null 2>&1; then
-            echo "Tag ${{ env.version }} already exists, skipping."
+          if git rev-parse $VERSION >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists, skipping."
           else
-            git tag ${{ env.version }}
-            git push origin ${{ env.version }}
+            git tag $VERSION
+            git push origin $VERSION
           fi
-
       - name: Create versioned release
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ env.version }}
-          name: Release ${{ env.version }}
+          tag_name: ${{ env.VERSION }}
+          name: Release ${{ env.VERSION }}
           body: |
             Auto-generated release for commit: ${{ github.sha }}
           draft: false
           prerelease: false
-
       - name: Update latest tag
         run: |
           git tag -fa latest -m "Latest release"
           git push origin latest --force
 
+  docker_publish:
+    needs: calculate_version
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.calculate_version.outputs.version }}
+    steps:
       - name: Checkout main repo
         uses: actions/checkout@v4
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Extract version (without v)
         id: vars
         run: |
-          VERSION=${{ env.version }}
           VERSION_NO_V=${VERSION#v}
           echo "VERSION_NO_V=$VERSION_NO_V" >> $GITHUB_ENV
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
