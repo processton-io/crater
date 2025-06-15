@@ -29,7 +29,7 @@ COPY ./docker/nginx/ /etc/nginx/sites-available/
 COPY ./docker/php/fpm.ini /etc/php/8.4/fpm/php.ini
 COPY ./docker/php/cli.ini /etc/php/8.4/cli/php.ini
 
-ADD ./docker/supervisor/worker.conf /etc/supervisor/conf.d/worker.conf
+ADD ./docker/supervisord.conf /etc/supervisor/conf.d/worker.conf
 
 COPY ./docker/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
