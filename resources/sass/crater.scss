@@ -1,3 +1,6 @@
+@use "themes.scss";
+@use "components/animation.scss";
+
 @tailwind base;
 
 @tailwind components;
@@ -44,25 +47,11 @@
     src: url("/fonts/Poppins-SemiBold.ttf") format("truetype");
 }
 
-// Default Theme
-//----------------------------------
-
-@import "themes.scss";
-
-// Base Components
-//----------------------------------
-
-@import "components/animation.scss";
-
 body {
     min-height: 100vh;
     min-height: -webkit-fill-available;
 }
 
 html {
-    height: -webkit-fill-available;
-}
-
-.h-screen-ios {
     height: -webkit-fill-available;
 }

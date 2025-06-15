@@ -1,8 +1,6 @@
 #!/bin/bash
 
-service cron start
 service nginx start
-service php8.1-fpm start
 service supervisor start
 
-# exec "$@"
+php-fpm -F

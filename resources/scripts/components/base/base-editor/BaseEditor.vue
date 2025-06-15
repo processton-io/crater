@@ -693,7 +693,7 @@ export default {
   min-height: 200px;
   padding: 8px 12px;
   outline: none;
-  @apply rounded-md rounded-tl-none rounded-tr-none border border-transparent;
+  @reference rounded-md rounded-tl-none rounded-tr-none border border-transparent;
 
   h1 {
     font-size: 2em;
@@ -750,6 +750,6 @@ export default {
 }
 
 .ProseMirror:focus {
-  @apply border border-primary-400 ring-primary-400;
+  @reference border border-primary-400 ring-primary-400;
 }
 </style>

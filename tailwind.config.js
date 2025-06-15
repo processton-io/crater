@@ -70,7 +70,6 @@ module.exports = {
     require('@tailwindcss/typography'),
     require('@tailwindcss/aspect-ratio'),
     require('tailwind-scrollbar'),
-    require('@rvxlab/tailwind-plugin-ios-full-height'),
     require('@tailwindcss/line-clamp'),
   ],
 }
