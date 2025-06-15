@@ -3,6 +3,10 @@ name: Build and Push Docker Image
 on:
   release:
     types: [published, edited]
+  workflow_run:
+    workflows: ["Auto Release on Main Commit"]
+    types:
+      - completed
 
 jobs:
   build-and-push:
@@ -30,4 +34,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/crater:${{ env.RELEASE_TAG }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/crater:${{ env.RELEASE_TAG }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/crater:latest
