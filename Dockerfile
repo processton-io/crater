@@ -42,9 +42,6 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 RUN ln -s /usr/local/bin/docker-entrypoint.sh /
 ENTRYPOINT ["docker-entrypoint.sh"]
 
-RUN mkdir -p /var/database
-COPY ./database/laravel.db /var/database/laravel.db
-
 #####################################
 # Composer:
 #####################################
