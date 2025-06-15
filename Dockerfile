@@ -1,181 +1,66 @@
-FROM ubuntu:20.04
+FROM php:8.1-fpm
 LABEL maintainer="ahmadkokab@processton.com"
 
-ENV DEBIAN_FRONTEND=noninteractive
+# Install system dependencies and Nginx
+RUN apt-get update && apt-get install -y \
+    nginx supervisor git unzip curl nano cron mariadb-client \
+    build-essential libmemcached-dev libfcgi-bin libzip-dev libz-dev libpq-dev \
+    libjpeg-dev libpng-dev libfreetype6-dev libssl-dev libvips-dev libmagickwand-dev \
+    libxml2-dev libreadline-dev libgmp-dev iputils-ping gcc g++ make autoconf automake libtool \
+    python3 python3-pip nasm openssl sqlite3 libsqlite3-dev tar ca-certificates pkg-config \
+    libonig-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y software-properties-common && \
-    add-apt-repository -y ppa:ondrej/php && apt-get update
+# Install PHP extensions (some are built-in or enabled by default)
+RUN set -ex \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install bcmath \
+    && docker-php-ext-install mbstring \
+    && docker-php-ext-install pdo \
+    && docker-php-ext-install pdo_mysql \
+    && docker-php-ext-install xml \
+    && docker-php-ext-install zip \
+    && docker-php-ext-install soap \
+    && docker-php-ext-install exif \
+    && docker-php-ext-install gd \
+    && docker-php-ext-install intl \
+    && docker-php-ext-install gmp \
+    && docker-php-ext-install pgsql \
+    && docker-php-ext-install pdo_pgsql \
+    && docker-php-ext-install pdo_sqlite
     
-RUN apt-get update -y && apt upgrade -y && apt-get install -y --force-yes --no-install-recommends \
-    build-essential \
-    php8.2 \
-    php8.2-fpm \
-    php8.2-cli \
-    php-pear \
-    php-dev \
-    nginx \
-    libmemcached-dev \
-    libfcgi-bin \
-    libzip-dev \
-    libz-dev \
-    libzip-dev \
-    libpq-dev \
-    libjpeg-dev \
-    libpng-dev \
-    libfreetype6-dev \
-    libssl-dev \
-    libvips-dev \
-    openssh-server \
-    libmagickwand-dev \
-    git \
-    cron \
-    nano \
-    libxml2-dev \
-    libreadline-dev \
-    libgmp-dev \
-    mariadb-client \
-    unzip \
-    build-essential \
-    iputils-ping \
-    gcc \
-    g++ \
-    make \
-    autoconf \
-    automake \
-    libtool \
-    python3 python3-pip \
-    nasm \
-    openssl \
-    curl \
-    sqlite3 \
-    libsqlite3-dev tar ca-certificates
-    
-RUN apt-get install -y --no-install-recommends \
-    php8.2-bcmath \
-    php8.2-curl \
-    php8.2-mbstring \
-    php8.2-mysql \
-    php8.2-tokenizer \
-    php8.2-xml \
-    php8.2-zip \
-    php8.2-soap \
-    php8.2-exif \
-    php8.2-opcache \
-    php8.2-gd \
-    php8.2-intl \
-    php8.2-gmp \
-    php8.2-pgsql \
-    php8.2-sqlite3 \
-    php8.2-cli \
-    php8.2-intl
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php \
+    && mv composer.phar /usr/local/bin/composer
 
-RUN echo "soap.wsdl_cache_dir=/tmp" > /etc/php/8.2/cli/conf.d/20-soap.ini
+# Install Node.js 20.x and Yarn
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get update && apt-get install -y nodejs \
+    && npm install -g npm@11.1.0
 
-RUN echo "exif.decode_unicode_motorola=1" > /etc/php/8.2/cli/conf.d/20-exif.ini
+# Set up Nginx and PHP configs
+COPY ./docker/nginx/default.conf /etc/nginx/sites-available/default
+COPY ./docker/php/fpm.ini /usr/local/etc/php/conf.d/fpm.ini
+COPY ./docker/php/cli.ini /usr/local/etc/php/conf.d/cli.ini
+COPY ./docker/supervisord.conf /etc/supervisor/conf.d/worker.conf
 
-RUN echo "extension=exif" > /etc/php/8.2/cli/conf.d/20-exif.ini
-
-#####################################
-# Required Variables:
-#####################################
-
-RUN export NODE_OPTIONS="--no-deprecation"
-
-ENV COMPOSER_MEMORY_LIMIT='-1'
-
-#####################################
-# Composer:
-#####################################
-
-# Install composer and add its bin to the PATH.
-RUN curl -s http://getcomposer.org/installer | php && \
-    echo "export PATH=${PATH}:/var/www/vendor/bin" >> ~/.bashrc && \
-    mv composer.phar /usr/local/bin/composer
-# Source the bash
-RUN . ~/.bashrc
-
-#####################################
-# Laravel Supervisor:
-#####################################
-
-RUN apt-get install -y supervisor
-
-
-#####################################
-# NODE JS & YARN:
-#####################################
-
-RUN curl -sL https://deb.nodesource.com/setup_20.x | bash -
-
-RUN apt-get install -y nodejs
-
-RUN npm install -g npm@11.1.0
-
-RUN npm install -g yarn
-
-RUN yarn init -y
-RUN yarn cache clean
-RUN yarn set version 4.1.1
-
-#####################################
-# Git Safe Directory && Source repos:
-#####################################
-
-RUN git config --global --add safe.directory /var/www
-
-RUN npm config set registry https://registry.npmmirror.com/
-
-#####################################
-# Files & Directories Permissions:
-#####################################
-
-RUN usermod -u 1000 www-data
-
-COPY ./docker/nginx/ /etc/nginx/sites-available/
-
-COPY ./docker/php/fpm.ini /etc/php/8.4/fpm/php.ini
-COPY ./docker/php/cli.ini /etc/php/8.4/cli/php.ini
-
-ADD ./docker/supervisord.conf /etc/supervisor/conf.d/worker.conf
-
-COPY ./docker/docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-RUN ln -s /usr/local/bin/docker-entrypoint.sh /
+# Entrypoint
+COPY ./docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh && ln -s /usr/local/bin/docker-entrypoint.sh /
 ENTRYPOINT ["docker-entrypoint.sh"]
 
-#####################################
-# Composer:
-#####################################
-COPY . /var/www
-
+# Set working directory and copy app
 WORKDIR /var/www
+COPY --chown=www-data:www-data . /var/www
 
-RUN git config --global --add safe.directory /var/www
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --no-plugins --no-dev --prefer-dist
+RUN cp .env.example .env
+# Install PHP and JS dependencies, build assets
+RUN composer install --no-interaction --no-plugins --no-dev --prefer-dist
+# RUN npm i && npm run build
 
-#####################################
-# YARN Setup:
-#####################################
-
-RUN npm install -g laravel-mix webpack laravel-vite-plugin vite
-RUN npm install -D webpack-cli
-RUN yarn install --frozen-lockfile
-RUN yarn build
-
-#####################################
-# Artisan:
-#####################################
-
-RUN php artisan migrate
-RUN php artisan config:clear
-RUN php artisan cache:clear
-
-#####################################
-# Start Services:
-#####################################
+# Laravel setup
+RUN php artisan migrate --force && php artisan config:clear && php artisan cache:clear
 
 USER root
-
-CMD ["docker-entrypoint.sh"]
-
 EXPOSE 80
+CMD ["docker-entrypoint.sh"]

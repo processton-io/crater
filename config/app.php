@@ -168,8 +168,7 @@ return [
         Crater\Providers\EventServiceProvider::class,
         Crater\Providers\RouteServiceProvider::class,
         Crater\Providers\DropboxServiceProvider::class,
-        Crater\Providers\ViewServiceProvider::class,
-        Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class,
+        Crater\Providers\ViewServiceProvider::class
     ],
 
     /*
