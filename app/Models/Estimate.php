@@ -495,7 +495,7 @@ class Estimate extends Model implements HasMedia
         foreach ($templates as $key => $template) {
             $templateName = Str::before(basename($template), '.blade.php');
             $estimateTemplates[$key]['name'] = $templateName;
-            $estimateTemplates[$key]['path'] = vite_asset('/img/PDF/'.$templateName.'.png');
+            $estimateTemplates[$key]['path'] = asset('resources/static/img/PDF/'.$templateName.'.png');
         }
 
         return $estimateTemplates;
