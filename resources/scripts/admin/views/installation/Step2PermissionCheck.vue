@@ -1,31 +1,16 @@
 <template>
   <BaseWizardStep
-    :title="$t('wizard.permissions.permissions')"
-    :description="$t('wizard.permissions.permission_desc')"
+    title="Installing..."
   >
-    <!-- Content Placeholders -->
-    <BaseContentPlaceholders v-if="isFetchingInitialData">
-      <div
-        v-for="(permission, index) in 3"
-        :key="index"
-        class="
-          grid grid-flow-row grid-cols-3
-          lg:gap-24
-          sm:gap-4
-          border border-gray-200
-        "
-      >
-        <BaseContentPlaceholdersText :lines="1" class="col-span-4 p-3" />
+    <div>
+      <div class="flex justify-center items-center h-32">
+        <svg class="animate-spin h-10 w-10 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
       </div>
-      <BaseContentPlaceholdersBox
-        :rounded="true"
-        class="mt-10"
-        style="width: 96px; height: 42px"
-      />
-    </BaseContentPlaceholders>
-    <!-- End of Content Placeholder -->
-
-    <div v-else class="relative">
+    </div>
+    <div class="relative hidden">
       <div
         v-for="(permission, index) in permissions"
         :key="index"
@@ -51,7 +36,7 @@
 
       <BaseButton
         v-show="!isFetchingInitialData"
-        class="mt-10"
+        class="mt-10 hidden"
         :loading="isSaving"
         :disabled="isSaving"
         @click="next"
@@ -113,6 +98,10 @@ async function getPermissions() {
   }
 
   isFetchingInitialData.value = false
+
+  setTimeout(() => {
+    next()
+  }, 1000)
 }
 
 function next() {

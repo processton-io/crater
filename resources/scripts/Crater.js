@@ -40,6 +40,7 @@ export default class Crater {
 
     const i18n = createI18n({
       locale: 'en',
+      legacy: false,
       fallbackLocale: 'en',
       globalInjection: true,
       messages: this.messages,

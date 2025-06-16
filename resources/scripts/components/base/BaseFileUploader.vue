@@ -16,7 +16,6 @@
       duration-300
       ease-in-out
       isolate
-      w-full
       hover:border-gray-300
       group
       min-h-[100px]

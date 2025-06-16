@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col items-center justify-between w-full pt-10">
+  <div class="flex flex-col items-center justify-center w-full pt-10 my-auto">
     <img
       id="logo-crater"
       src="/img/crater-logo.png"

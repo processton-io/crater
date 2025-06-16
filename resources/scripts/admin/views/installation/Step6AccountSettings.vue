@@ -6,7 +6,7 @@
     <form action="" @submit.prevent="next">
       <div class="grid grid-cols-1 mb-4 md:grid-cols-2 md:mb-6">
         <BaseInputGroup
-          :label="$tc('settings.account_settings.profile_picture')"
+          :label="$t('settings.account_settings.profile_picture')"
         >
           <BaseFileUploader
             :avatar="true"
@@ -151,7 +151,7 @@ let avatarFileBlob = ref(null)
 const userStore = useUserStore()
 const companyStore = useCompanyStore()
 
-const { t } = useI18n()
+const { tm, t } = useI18n()
 
 const userForm = computed(() => {
   return userStore.userForm

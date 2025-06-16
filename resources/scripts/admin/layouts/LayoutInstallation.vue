@@ -2,7 +2,7 @@
   <div class="h-screen overflow-y-auto text-base">
     <NotificationRoot />
 
-    <div class="container mx-auto px-4">
+    <div class="container mx-auto px-4 h-screen flex">
       <router-view />
     </div>
   </div>

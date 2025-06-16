@@ -1,9 +1,16 @@
 <template>
   <BaseWizardStep
-    :title="$t('wizard.req.system_req')"
-    :description="$t('wizard.req.system_req_desc')"
+    title="Installing.."
   >
-    <div class="w-full md:w-2/3">
+    <div>
+      <div class="flex justify-center items-center h-32">
+        <svg class="animate-spin h-10 w-10 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+      </div>
+    </div>
+    <div class="w-full md:w-2/3 hidden">
       <div class="mb-6">
         <div
           v-if="phpSupportInfo"
@@ -71,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useInstallationStore } from '@/scripts/admin/stores/installation.js'
 
 const emit = defineEmits(['next'])
@@ -103,6 +110,9 @@ async function getRequirements() {
   if (response.data) {
     requirements.value = response?.data?.requirements?.requirements?.php
     phpSupportInfo.value = response?.data?.phpSupportInfo
+    setTimeout(async () => {
+      await next()
+    }, 1000)
   }
 }
 
@@ -111,4 +121,8 @@ function next() {
   emit('next')
   isSaving.value = false
 }
+
+onMounted(async () => {
+  await getRequirements()
+})
 </script>

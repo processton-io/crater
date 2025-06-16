@@ -1,21 +1,30 @@
 <template>
   <BaseWizardStep
-    :title="$t('wizard.database.database')"
-    :description="$t('wizard.database.desc')"
+    title="Installing."
     step-container="w-full p-8 mb-8 bg-white border border-gray-200 border-solid rounded md:w-full"
   >
-    <component
-      :is="databaseData.database_connection"
-      :config-data="databaseData"
-      :is-saving="isSaving"
-      @on-change-driver="getDatabaseConfig"
-      @submit-data="next"
-    />
+    <div>
+      <div class="flex justify-center items-center h-32">
+        <svg class="animate-spin h-10 w-10 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+      </div>
+    </div>
+    <div class="hidden">
+      <component
+        :is="databaseData.database_connection"
+        :config-data="databaseData"
+        :is-saving="isSaving"
+        @on-change-driver="getDatabaseConfig"
+        @submit-data="next"
+      />
+    </div>
   </BaseWizardStep>
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Mysql from './database/MysqlDatabase.vue'
 import Pgsql from './database/PgsqlDatabase.vue'
 import Sqlite from './database/SqliteDatabase.vue'
@@ -118,6 +127,12 @@ export default {
         isSaving.value = false
       }
     }
+
+    onMounted(() => {
+      setTimeout(() => {
+        next(databaseData.value)
+      }, 1000)
+    })
 
     return {
       databaseData,
