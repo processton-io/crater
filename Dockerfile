@@ -29,6 +29,9 @@ RUN set -ex \
     && docker-php-ext-install pdo_pgsql \
     && docker-php-ext-install pdo_sqlite
     
+RUN pecl install imagick \
+    && docker-php-ext-enable imagick
+
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php \
     && mv composer.phar /usr/local/bin/composer
