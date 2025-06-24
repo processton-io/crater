@@ -17,8 +17,11 @@ use Crater\Http\Controllers\V1\PDF\DownloadReceiptController;
 use Crater\Http\Controllers\V1\PDF\EstimatePdfController;
 use Crater\Http\Controllers\V1\PDF\InvoicePdfController;
 use Crater\Http\Controllers\V1\PDF\PaymentPdfController;
+use Crater\Http\Controllers\ImportController;
 use Crater\Models\Company;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/import-old', ImportController::class);
 
 // Module Asset Includes
 // ----------------------------------------------
