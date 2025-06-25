@@ -165,7 +165,7 @@ class ImportController extends Controller
         $importedInvoices = 0;
         $secondaryInvoices = DB::connection('mysql_secondary')->table('invoices')->get();
         foreach ($secondaryInvoices as $invoice) {
-            $invoice = \Crater\Models\Invoice::create(
+            $inv = \Crater\Models\Invoice::create(
                 [
                     'invoice_date' => $invoice->invoice_date,
                     'invoice_number' => $invoice->invoice_number,
@@ -208,43 +208,43 @@ class ImportController extends Controller
                 ]
             );
 
-            $invoice->__set('id', $invoice->id); // Set the ID to match the secondary DB
-            $invoice->save();
+            $inv->__set('id', $invoice->id); // Set the ID to match the secondary DB
+            $inv->save();
             $importedInvoices++;
+
+            $secondaryInvoiceItems = DB::connection('mysql_secondary')->table('invoice_items')
+                ->where('invoice_id',$inv->id)->get();
+            foreach ($secondaryInvoiceItems as $item) {
+                $invItem = \Crater\Models\InvoiceItem::create(
+                    [
+                        'name' => $item->name,
+                        'discount_type' => $item->discount_type,
+                        'price' => $item->price,
+                        'quantity' => $item->quantity,
+                        'discount' => $item->discount ?? null,
+                        'discount_val' => $item->discount_val,
+                        'tax' => $item->tax,
+                        'total' => $item->total,
+                        'item_id' => $item->item_id ?? null,
+                        'company_id' => $item->company_id ?? null,
+                        'created_at' => $item->created_at ?? null,
+                        'updated_at' => $item->updated_at ?? null,
+                        'description' => $item->description ?? null,
+                        'unit_name' => $item->unit_name ?? null,
+                        'invoice_id' => $invoice->id,
+                        'recurring_invoice_id' => $item->recurring_invoice_id ?? null,
+                        'base_price' => $item->base_price ?? null,
+                        'exchange_rate' => $item->exchange_rate ?? null,
+                        'base_discount_val' => $item->base_discount_val ?? null,
+                        'base_tax' => $item->base_tax ?? null,
+                        'base_total' => $item->base_total ?? null,
+                    ]
+                );
+                $invItem->__set('id', $item->id); // Set the ID to match the secondary DB
+                $invItem->save();
+            }
         }
-        // Import invoice items
-        $importedInvoiceItems = 0;
-        $secondaryInvoiceItems = DB::connection('mysql_secondary')->table('invoice_items')->get();
-        foreach ($secondaryInvoiceItems as $item) {
-            $invItem = \Crater\Models\InvoiceItem::create(
-                [
-                    'name' => $item->name,
-                    'discount_type' => $item->discount_type,
-                    'price' => $item->price,
-                    'quantity' => $item->quantity,
-                    'discount' => $item->discount ?? null,
-                    'discount_val' => $item->discount_val,
-                    'tax' => $item->tax,
-                    'total' => $item->total,
-                    'item_id' => $item->item_id ?? null,
-                    'company_id' => $item->company_id ?? null,
-                    'created_at' => $item->created_at ?? null,
-                    'updated_at' => $item->updated_at ?? null,
-                    'description' => $item->description ?? null,
-                    'unit_name' => $item->unit_name ?? null,
-                    'invoice_id' => $item->invoice_id ?? null,
-                    'recurring_invoice_id' => $item->recurring_invoice_id ?? null,
-                    'base_price' => $item->base_price ?? null,
-                    'exchange_rate' => $item->exchange_rate ?? null,
-                    'base_discount_val' => $item->base_discount_val ?? null,
-                    'base_tax' => $item->base_tax ?? null,
-                    'base_total' => $item->base_total ?? null,
-                ]
-            );
-            $invItem->__set('id', $item->id); // Set the ID to match the secondary DB
-            $invItem->save();
-            $importedInvoiceItems++;
-        }
+        
         // Import payments
         $importedPayments = 0;
         $secondaryPayments = DB::connection('mysql_secondary')->table('payments')->get();
@@ -285,7 +285,6 @@ class ImportController extends Controller
             'imported_total_addresses' => $importedAddresses,
             'imported_total_items' => $importedItems,
             'imported_total_invoices' => $importedInvoices,
-            'imported_total_invoice_items' => $importedInvoiceItems,
             'imported_total_payments' => $importedPayments,
         ]);
     }
