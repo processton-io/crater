@@ -40,14 +40,19 @@ class ImportController extends Controller
             ], 500);
         }
 
-        // Empty customers, addresses, and companies tables before import
-        \Crater\Models\Customer::truncate();
-        \Crater\Models\Address::truncate();
-        \Crater\Models\Company::truncate();
-        \Crater\Models\Item::truncate();
-        \Crater\Models\Invoice::truncate();
+        // Empty tables before import, handling foreign key constraints
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        
+        // Delete in reverse dependency order to avoid foreign key constraint issues
         \Crater\Models\InvoiceItem::truncate();
         \Crater\Models\Payment::truncate();
+        \Crater\Models\Invoice::truncate();
+        \Crater\Models\Address::truncate();
+        \Crater\Models\Item::truncate();
+        \Crater\Models\Customer::truncate();
+        \Crater\Models\Company::truncate();
+        
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         // Import companies
         $importedCompanies = 0;
         $secondaryCompanies = DB::connection('mysql_secondary')->table('companies')->get();
