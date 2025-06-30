@@ -157,7 +157,7 @@ class ImportController extends Controller
                     'created_at' => $item->created_at ?? null,
                     'updated_at' => $item->updated_at ?? null,
                     'creator_id' => $item->creator_id ?? null,
-                    'currency_id' => $item->currency_id ?? null,
+                    'currency_id' => $item->currency_id > 72 ? $item->currency_id - 72 : $item->currency_id,
                     'tax_per_item' => $item->tax_per_item ?? 0,
                 ]
             );
@@ -204,7 +204,7 @@ class ImportController extends Controller
                     'base_total' => $invoice->base_total ?? null,
                     'base_tax' => $invoice->base_tax ?? null,
                     'base_due_amount' => $invoice->base_due_amount ?? null,
-                    'currency_id' => $invoice->currency_id ?? null,
+                    'currency_id' => $invoice->currency_id > 72 ? $invoice->currency_id - 72 : $invoice->currency_id,
                     'sequence_number' => $invoice->sequence_number ?? null,
                     'customer_sequence_number' => $invoice->customer_sequence_number ?? null,
                     'sales_tax_type' => $invoice->sales_tax_type ?? null,
@@ -271,7 +271,7 @@ class ImportController extends Controller
                     'customer_id' => $payment->customer_id ?? null,
                     'exchange_rate' => $payment->exchange_rate ?? null,
                     'base_amount' => $payment->base_amount ?? null,
-                    'currency_id' => $payment->currency_id ?? null,
+                    'currency_id' => $payment->currency_id > 72 ? $payment->currency_id - 72 : $payment->currency_id,
                     'sequence_number' => $payment->sequence_number ?? null,
                     'customer_sequence_number' => $payment->customer_sequence_number ?? null,
                     'transaction_id' => $payment->transaction_id ?? null,
