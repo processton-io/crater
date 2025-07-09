@@ -20,6 +20,7 @@ class CompaniesController extends Controller
         $user = $request->user();
 
         $company = Company::create($request->getCompanyPayload());
+        $company->owner_id = $user->id;
         $company->unique_hash = Hashids::connection(Company::class)->encode($company->id);
         $company->save();
         $company->setupDefaultData();
