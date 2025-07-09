@@ -3,7 +3,7 @@ services:
     build:
       dockerfile: Dockerfile
     restart: unless-stopped
-    container_name: client_app
+    container_name: carter_app
     volumes:
       - ./:/var/www
       - ./docker/nginx/default.conf:/etc/nginx/sites-available/default
@@ -13,6 +13,39 @@ services:
       - "80:80"
     networks:
       - crater
+
+  db:
+    image: mysql:8
+    restart: unless-stopped
+    container_name: crater_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: crater
+      MYSQL_USER: crater
+      MYSQL_PASSWORD: crater
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - crater
+
+  pma:
+    image: phpmyadmin/phpmyadmin
+    platform: linux/amd64
+    depends_on:
+      - db
+    restart: unless-stopped
+    container_name: crater_pma
+    environment:
+      PMA_HOST: db
+      PMA_USER: crater
+      PMA_PASSWORD: crater
+    ports:
+      - "8080:80"
+    networks:
+      - crater
+volumes:
+  db_data:
+
 networks:
   crater:
     driver: bridge
