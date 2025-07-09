@@ -38,8 +38,8 @@ RUN curl -sS https://getcomposer.org/installer | php \
 
 # Install Node.js 20.x and Yarn
 RUN curl -sL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get update && apt-get install -y nodejs \
-    && npm install -g npm@11.4.2
+    && apt-get update && apt-get install -y nodejs
+RUN npm install -g npm@11.4.2
 
 # Set up Nginx and PHP configs
 COPY ./docker/nginx/default.conf /etc/nginx/sites-available/default
@@ -59,7 +59,7 @@ COPY --chown=www-data:www-data . /var/www
 RUN cp .env.example .env
 # Install PHP and JS dependencies, build assets
 RUN composer install --no-interaction --no-plugins --no-dev --prefer-dist
-RUN npm ci && npm run build
+RUN npm i && NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # Laravel setup
 RUN php artisan migrate --force && php artisan config:clear && php artisan cache:clear
